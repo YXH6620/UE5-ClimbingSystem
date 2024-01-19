@@ -4,23 +4,35 @@
 #include "Components/MyCharacterMovementComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "ClimbingSystem/ClimbingSystemCharacter.h"
+#include "ClimbingSystem/DebugHelper.h"
 
 void UMyCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-	FActorComponentTickFunction* ThisTickFunction)
+                                                  FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	TraceClimbableSurface();
-	TraceFromEyeHeight(100.f);
+	//TraceClimbableSurface();
+	//TraceFromEyeHeight(100.f);
 }
 
 
 #pragma region ClimbTraces
 TArray<FHitResult> UMyCharacterMovementComponent::DoCapsuleTraceMultiByObject(const FVector& Start, const FVector& End,
-                                                                              bool bShowDebugShape)
+                                                                              bool bShowDebugShape,bool bDrawPersistantShapes)
 {
 	TArray<FHitResult> OutCapsuleTraceHitResults;
 
+	EDrawDebugTrace::Type DebugTraceType = EDrawDebugTrace::None;
+	if(bShowDebugShape)
+	{
+		DebugTraceType = EDrawDebugTrace::ForOneFrame;
+
+		if(bDrawPersistantShapes)
+		{
+			DebugTraceType = EDrawDebugTrace::Persistent;
+		}
+	}
+	
 	UKismetSystemLibrary::CapsuleTraceMultiForObjects(
 		this,
 		Start,
@@ -30,7 +42,7 @@ TArray<FHitResult> UMyCharacterMovementComponent::DoCapsuleTraceMultiByObject(co
 		ClimbableSurfaceTraceTypes,
 		false,
 		TArray<AActor*>(),
-		bShowDebugShape ? EDrawDebugTrace::ForOneFrame : EDrawDebugTrace::None,
+		DebugTraceType,
 		OutCapsuleTraceHitResults,
 		false
 	);
@@ -39,9 +51,20 @@ TArray<FHitResult> UMyCharacterMovementComponent::DoCapsuleTraceMultiByObject(co
 }
 
 FHitResult UMyCharacterMovementComponent::DOLineTarceSingelByObject(const FVector& Start, const FVector& End,
-	bool bShowDebugShape)
+	bool bShowDebugShape,bool bDrawPersistantShapes)
 {
 	FHitResult OutHit;
+
+	EDrawDebugTrace::Type DebugTraceType = EDrawDebugTrace::None;
+	if(bShowDebugShape)
+	{
+		DebugTraceType = EDrawDebugTrace::ForOneFrame;
+
+		if(bDrawPersistantShapes)
+		{
+			DebugTraceType = EDrawDebugTrace::Persistent;
+		}
+	}
 
 	UKismetSystemLibrary::LineTraceSingleForObjects(
 		this,
@@ -50,7 +73,7 @@ FHitResult UMyCharacterMovementComponent::DOLineTarceSingelByObject(const FVecto
 		ClimbableSurfaceTraceTypes,
 		false,
 		TArray<AActor*>(),
-		bShowDebugShape? EDrawDebugTrace::ForOneFrame : EDrawDebugTrace::None,
+		DebugTraceType,
 		OutHit,
 		false
 	);
@@ -59,16 +82,18 @@ FHitResult UMyCharacterMovementComponent::DOLineTarceSingelByObject(const FVecto
 #pragma endregion
 
 #pragma region ClimbCore
-void UMyCharacterMovementComponent::TraceClimbableSurface()
+bool UMyCharacterMovementComponent::TraceClimbableSurface()
 {
 	const FVector StartOffset = UpdatedComponent->GetForwardVector() * 30.f;
 	const FVector Start = UpdatedComponent->GetComponentLocation()+StartOffset;
 	const FVector End = Start + UpdatedComponent->GetForwardVector();
 
-	DoCapsuleTraceMultiByObject(Start, End, true);
+	ClimbableSurfacesTracedResults = DoCapsuleTraceMultiByObject(Start,End,true,true);
+
+	return !ClimbableSurfacesTracedResults.IsEmpty();
 }
 
-void UMyCharacterMovementComponent::TraceFromEyeHeight(float TraceDistance, float TraceStartOffset)
+FHitResult UMyCharacterMovementComponent::TraceFromEyeHeight(float TraceDistance, float TraceStartOffset)
 {
 	const FVector ComponentLocation = UpdatedComponent->GetComponentLocation();
 	const FVector EyeHeightOffset = UpdatedComponent->GetUpVector() * (CharacterOwner->BaseEyeHeight + TraceStartOffset);
@@ -76,6 +101,40 @@ void UMyCharacterMovementComponent::TraceFromEyeHeight(float TraceDistance, floa
 	const FVector Start = ComponentLocation + EyeHeightOffset;
 	const FVector End = Start + UpdatedComponent->GetForwardVector() * TraceDistance;
 
-	DOLineTarceSingelByObject(Start,End,true);
+	return DOLineTarceSingelByObject(Start,End,true, true);
+}
+
+bool UMyCharacterMovementComponent::CanStartClimbing()
+{
+	if(IsFalling()) return false;
+	if(!TraceClimbableSurface()) return false;
+	if(!TraceFromEyeHeight(100.f).bBlockingHit) return false;
+
+	return true;
+}
+
+void UMyCharacterMovementComponent::ToggleClimbing(bool bEnableClimb)
+{
+	if(bEnableClimb)
+	{
+		if(CanStartClimbing())
+		{
+			// Enter the Climb state
+			Debug::Print(TEXT("Can start climbing"));
+		}
+		else
+		{
+			Debug::Print(TEXT("Can not start climbing"));
+		}
+	}
+	else
+	{
+		// Stop Climbing
+	}
+}
+
+bool UMyCharacterMovementComponent::IsClimbing() const
+{
+	return MovementMode == MOVE_Custom && CustomMovementMode == ECustomMovementMode::MOVE_Climb;
 }
 #pragma endregion

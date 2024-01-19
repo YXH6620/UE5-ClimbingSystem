@@ -6,6 +6,15 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "MyCharacterMovementComponent.generated.h"
 
+UENUM(BlueprintType)
+namespace ECustomMovementMode
+{
+	enum Type
+	{
+		MOVE_Climb UMETA(DisplayName = "Climb Mode")
+	};
+}
+
 /**
  * 
  */
@@ -22,8 +31,8 @@ private:
 
 #pragma region ClimbTraces
 
-	TArray<FHitResult> DoCapsuleTraceMultiByObject(const FVector& Start, const FVector& End, bool bShowDebugShape = false);
-	FHitResult DOLineTarceSingelByObject(const FVector& Start, const FVector& End, bool bShowDebugShape = false);
+	TArray<FHitResult> DoCapsuleTraceMultiByObject(const FVector& Start, const FVector& End, bool bShowDebugShape = false, bool bDrawPersistantShapes = false);
+	FHitResult DOLineTarceSingelByObject(const FVector& Start, const FVector& End, bool bShowDebugShape = false, bool bDrawPersistantShapes = false);
 	
 #pragma endregion
 
@@ -38,14 +47,21 @@ private:
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category = "Character Movement : Climbing",meta = (AllowPrivateAccess = "true"))
 	float ClimbCapsuleTraceHalfHeight = 72.f;
 
+	TArray<FHitResult> ClimbableSurfacesTracedResults;
+	
 #pragma endregion
 
 
 #pragma region ClimbCore
 
-	void TraceClimbableSurface();
-	void TraceFromEyeHeight(float TraceDistance, float TraceStartOffset = 0.f);
+	bool TraceClimbableSurface();
+	FHitResult TraceFromEyeHeight(float TraceDistance, float TraceStartOffset = 0.f);
+	bool CanStartClimbing();
 
 #pragma endregion
-	
+
+
+public:
+	void ToggleClimbing(bool bEnableClimb);
+	bool IsClimbing()const;
 };
