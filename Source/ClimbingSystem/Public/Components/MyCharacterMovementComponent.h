@@ -6,15 +6,6 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "MyCharacterMovementComponent.generated.h"
 
-UENUM(BlueprintType)
-namespace ECustomMovementMode
-{
-	enum Type
-	{
-		ECMM_Climbing,
-	};
-}
-
 /**
  * 
  */
@@ -23,6 +14,26 @@ class CLIMBINGSYSTEM_API UMyCharacterMovementComponent : public UCharacterMoveme
 {
 	GENERATED_BODY()
 
-public:
-	bool IsClimbing() const;
+private:
+
+#pragma region ClimbTraces
+
+	TArray<FHitResult> DoCapsuleTraceMultiByObject(const FVector& Start, const FVector& End, bool bShowDebugShape = false);
+	
+#pragma endregion
+
+#pragma region ClimbVariables
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement : Climbing", meta = (AllowPrivateAccess = "true"))
+	TArray<TEnumAsByte<EObjectTypeQuery>> ClimbableSurfaceTraceTypes;
+
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category = "Character Movement: Climbing",meta = (AllowPrivateAccess = "true"))
+	float ClimbCapsuleTraceRadius = 50.f;
+
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category = "Character Movement: Climbing",meta = (AllowPrivateAccess = "true"))
+	float ClimbCapsuleTraceHalfHeight = 72.f;
+
+#pragma endregion
+
+	
 };

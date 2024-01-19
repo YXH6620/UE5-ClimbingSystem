@@ -2,12 +2,30 @@
 
 
 #include "Components/MyCharacterMovementComponent.h"
+#include "Kismet/KismetSystemLibrary.h"
 
-bool UMyCharacterMovementComponent::IsClimbing() const
+#pragma region ClimbTraces
+
+TArray<FHitResult> UMyCharacterMovementComponent::DoCapsuleTraceMultiByObject(const FVector& Start, const FVector& End,
+	bool bShowDebugShape)
 {
-	if(MovementMode == MOVE_Custom && CustomMovementMode == ECustomMovementMode::ECMM_Climbing)
-	{
-		return true;
-	}
-	return false;
+	TArray<FHitResult> OutCapsuleTraceHitResults;
+
+	UKismetSystemLibrary::CapsuleTraceMultiForObjects(
+		this,
+		Start,
+		End,
+		ClimbCapsuleTraceRadius,
+		ClimbCapsuleTraceHalfHeight,
+		ClimbableSurfaceTraceTypes,
+		false,
+		TArray<AActor*>(),
+		bShowDebugShape ? EDrawDebugTrace::ForOneFrame : EDrawDebugTrace::None,
+		OutCapsuleTraceHitResults,
+		false
+	);
+
+	return OutCapsuleTraceHitResults;
 }
+
+#pragma endregion
