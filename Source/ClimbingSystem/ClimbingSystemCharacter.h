@@ -39,12 +39,15 @@ class AClimbingSystemCharacter : public ACharacter
 
 public:
 	AClimbingSystemCharacter();
-	
-
-protected:
-
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* ClimbAction;
+
+	void OnClimbActionStarted(const FInputActionValue& Value);
+
+protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
