@@ -34,8 +34,16 @@ void UMyCharacterMovementComponent::OnMovementModeChanged(EMovementMode Previous
 	Super::OnMovementModeChanged(PreviousMovementMode, PreviousCustomMode);
 }
 
+void UMyCharacterMovementComponent::PhysCustom(float deltaTime, int32 Iterations)
+{
+	if(IsClimbing())
+	{
+		PhysClimb(deltaTime, Iterations);
+	}
+	
+	Super::PhysCustom(deltaTime, Iterations);
+}
 
-#pragma region ClimbTraces
 TArray<FHitResult> UMyCharacterMovementComponent::DoCapsuleTraceMultiByObject(const FVector& Start, const FVector& End,
                                                                               bool bShowDebugShape,bool bDrawPersistantShapes)
 {
@@ -98,9 +106,7 @@ FHitResult UMyCharacterMovementComponent::DOLineTarceSingelByObject(const FVecto
 	);
 	return OutHit;
 }
-#pragma endregion
 
-#pragma region ClimbCore
 bool UMyCharacterMovementComponent::TraceClimbableSurface()
 {
 	const FVector StartOffset = UpdatedComponent->GetForwardVector() * 30.f;
@@ -142,6 +148,45 @@ void UMyCharacterMovementComponent::StopClimbing()
 	SetMovementMode(MOVE_Falling);
 }
 
+void UMyCharacterMovementComponent::PhysClimb(float deltatime, int32 Iterations)
+{
+	if(deltatime < MIN_TICK_TIME)
+		return;;
+
+	// Process all th climbable surfaces info
+	// check if we should stop climbing
+
+	RestorePreAdditiveRootMotionVelocity();
+	if(!HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity())
+	{
+		// define the max climb speed and acceleration
+		CalcVelocity(deltatime, 0.f, true, MaxBreakClimbDeceleration);
+	}
+
+	ApplyRootMotionToVelocity(deltatime);
+	
+	FVector OldLocation = UpdatedComponent->GetComponentLocation();
+	const FVector Adjusted = Velocity * deltatime;
+	FHitResult Hit(1.f);
+
+	// handle climb rotation
+	SafeMoveUpdatedComponent(Adjusted, UpdatedComponent->GetComponentQuat(), true, Hit);
+
+	if(Hit.Time < 1.f)
+	{
+		// adjust and try again
+		HandleImpact(Hit, deltatime, Adjusted);
+		SlideAlongSurface(Adjusted, (1.f-Hit.Time), Hit.Normal, Hit, true);
+	}
+
+	if(!HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity())
+	{
+		Velocity = (UpdatedComponent->GetComponentLocation() - OldLocation) / deltatime;
+	}
+
+	/*Snap movement to climbable surfaces*/
+}
+
 void UMyCharacterMovementComponent::ToggleClimbing(bool bEnableClimb)
 {
 	if(bEnableClimb)
@@ -169,4 +214,3 @@ bool UMyCharacterMovementComponent::IsClimbing() const
 {
 	return MovementMode == MOVE_Custom && CustomMovementMode == ECustomMovementMode::MOVE_Climb;
 }
-#pragma endregion
