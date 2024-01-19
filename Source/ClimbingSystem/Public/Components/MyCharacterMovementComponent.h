@@ -23,6 +23,7 @@ private:
 #pragma region ClimbTraces
 
 	TArray<FHitResult> DoCapsuleTraceMultiByObject(const FVector& Start, const FVector& End, bool bShowDebugShape = false);
+	FHitResult DOLineTarceSingelByObject(const FVector& Start, const FVector& End, bool bShowDebugShape = false);
 	
 #pragma endregion
 
@@ -43,6 +44,7 @@ private:
 #pragma region ClimbCore
 
 	void TraceClimbableSurface();
+	void TraceFromEyeHeight(float TraceDistance, float TraceStartOffset = 0.f);
 
 #pragma endregion
 	
