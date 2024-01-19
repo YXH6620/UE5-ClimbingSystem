@@ -24,8 +24,8 @@ class CLIMBINGSYSTEM_API UMyCharacterMovementComponent : public UCharacterMoveme
 	GENERATED_BODY()
 
 public:
-	void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode) override;
 	
 private:
 
@@ -57,6 +57,9 @@ private:
 	bool TraceClimbableSurface();
 	FHitResult TraceFromEyeHeight(float TraceDistance, float TraceStartOffset = 0.f);
 	bool CanStartClimbing();
+
+	void StartClimbing();
+	void StopClimbing();
 
 #pragma endregion
 

@@ -5,6 +5,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "ClimbingSystem/ClimbingSystemCharacter.h"
 #include "ClimbingSystem/DebugHelper.h"
+#include "Components/CapsuleComponent.h"
 
 void UMyCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
                                                   FActorComponentTickFunction* ThisTickFunction)
@@ -13,6 +14,24 @@ void UMyCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick Ti
 
 	//TraceClimbableSurface();
 	//TraceFromEyeHeight(100.f);
+}
+
+void UMyCharacterMovementComponent::OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode)
+{
+	if(IsClimbing())
+	{
+		bOrientRotationToMovement = false;
+		CharacterOwner->GetCapsuleComponent()->SetCapsuleHalfHeight(48.f);
+	}
+
+	if(PreviousMovementMode == MOVE_Custom && PreviousCustomMode == ECustomMovementMode::MOVE_Climb)
+	{
+		bOrientRotationToMovement = true;
+		CharacterOwner->GetCapsuleComponent()->SetCapsuleHalfHeight(96.f);
+		StopMovementImmediately();
+	}
+	
+	Super::OnMovementModeChanged(PreviousMovementMode, PreviousCustomMode);
 }
 
 
@@ -113,6 +132,16 @@ bool UMyCharacterMovementComponent::CanStartClimbing()
 	return true;
 }
 
+void UMyCharacterMovementComponent::StartClimbing()
+{
+	SetMovementMode(MOVE_Custom, ECustomMovementMode::MOVE_Climb);
+}
+
+void UMyCharacterMovementComponent::StopClimbing()
+{
+	SetMovementMode(MOVE_Falling);
+}
+
 void UMyCharacterMovementComponent::ToggleClimbing(bool bEnableClimb)
 {
 	if(bEnableClimb)
@@ -121,15 +150,18 @@ void UMyCharacterMovementComponent::ToggleClimbing(bool bEnableClimb)
 		{
 			// Enter the Climb state
 			Debug::Print(TEXT("Can start climbing"));
+			StartClimbing();
 		}
 		else
 		{
 			Debug::Print(TEXT("Can not start climbing"));
+			
 		}
 	}
 	else
 	{
 		// Stop Climbing
+		StopClimbing();
 	}
 }
 
