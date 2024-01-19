@@ -7,6 +7,7 @@
 #include "InputActionValue.h"
 #include "ClimbingSystemCharacter.generated.h"
 
+class UMyCharacterMovementComponent;
 
 UCLASS(config=Game)
 class AClimbingSystemCharacter : public ACharacter
@@ -20,6 +21,9 @@ class AClimbingSystemCharacter : public ACharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	UMyCharacterMovementComponent* MyCharacterMovementComponent;
 	
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -38,7 +42,7 @@ class AClimbingSystemCharacter : public ACharacter
 	class UInputAction* LookAction;
 
 public:
-	AClimbingSystemCharacter();
+	AClimbingSystemCharacter(const FObjectInitializer& ObjectInitializer);
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
 
@@ -65,5 +69,7 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+	FORCEINLINE UMyCharacterMovementComponent* GetMyCharacterMovementComponent() {return MyCharacterMovementComponent;}
 };
 
