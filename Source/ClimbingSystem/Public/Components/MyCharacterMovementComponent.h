@@ -14,6 +14,10 @@ class CLIMBINGSYSTEM_API UMyCharacterMovementComponent : public UCharacterMoveme
 {
 	GENERATED_BODY()
 
+public:
+	void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	
 private:
 
 #pragma region ClimbTraces
@@ -27,13 +31,19 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement : Climbing", meta = (AllowPrivateAccess = "true"))
 	TArray<TEnumAsByte<EObjectTypeQuery>> ClimbableSurfaceTraceTypes;
 
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category = "Character Movement: Climbing",meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category = "Character Movement : Climbing",meta = (AllowPrivateAccess = "true"))
 	float ClimbCapsuleTraceRadius = 50.f;
 
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category = "Character Movement: Climbing",meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category = "Character Movement : Climbing",meta = (AllowPrivateAccess = "true"))
 	float ClimbCapsuleTraceHalfHeight = 72.f;
 
 #pragma endregion
 
+
+#pragma region ClimbCore
+
+	void TraceClimbableSurface();
+
+#pragma endregion
 	
 };
