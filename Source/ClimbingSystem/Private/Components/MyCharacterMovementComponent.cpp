@@ -44,6 +44,30 @@ void UMyCharacterMovementComponent::PhysCustom(float deltaTime, int32 Iterations
 	Super::PhysCustom(deltaTime, Iterations);
 }
 
+float UMyCharacterMovementComponent::GetMaxSpeed() const
+{
+	if(IsClimbing())
+	{
+		return MaxClimbSpeed;
+	}
+	else
+	{
+		return Super::GetMaxSpeed();
+	}
+}
+
+float UMyCharacterMovementComponent::GetMaxAcceleration() const
+{
+	if(IsClimbing())
+	{
+		return MaxClimbAcceleration;
+	}
+	else
+	{
+		return Super::GetMaxAcceleration();
+	}
+}
+
 TArray<FHitResult> UMyCharacterMovementComponent::DoCapsuleTraceMultiByObject(const FVector& Start, const FVector& End,
                                                                               bool bShowDebugShape,bool bDrawPersistantShapes)
 {
@@ -172,7 +196,7 @@ void UMyCharacterMovementComponent::PhysClimb(float deltatime, int32 Iterations)
 	FHitResult Hit(1.f);
 
 	// handle climb rotation
-	SafeMoveUpdatedComponent(Adjusted, UpdatedComponent->GetComponentQuat(), true, Hit);
+	SafeMoveUpdatedComponent(Adjusted, GetClimbRotation(deltatime), true, Hit);
 
 	if(Hit.Time < 1.f)
 	{
@@ -187,6 +211,7 @@ void UMyCharacterMovementComponent::PhysClimb(float deltatime, int32 Iterations)
 	}
 
 	/*Snap movement to climbable surfaces*/
+	SnapMovementToClimableSurfaces(deltatime);
 }
 
 void UMyCharacterMovementComponent::ProcessClimableSurfaceInfo()
@@ -207,6 +232,31 @@ void UMyCharacterMovementComponent::ProcessClimableSurfaceInfo()
 
 	Debug::Print(TEXT("ClimbableSurfaceLocation: ") + CurrentClimbableSurfaceLocation.ToCompactString(),FColor::Cyan,1);
 	Debug::Print(TEXT("ClimbableSurfaceNormal: ") + CurrentClimbableSurfaceNormal.ToCompactString(),FColor::Red,2);
+}
+
+FQuat UMyCharacterMovementComponent::GetClimbRotation(float DeltaTime)
+{
+	const FQuat CurrentQuat = UpdatedComponent->GetComponentQuat();
+
+	if(HasAnimRootMotion() || CurrentRootMotion.HasOverrideVelocity())
+	{
+		return CurrentQuat;
+	}
+
+	const FQuat TargetQuat = FRotationMatrix::MakeFromX(-CurrentClimbableSurfaceNormal).ToQuat();
+
+	return FMath::QInterpTo(CurrentQuat, TargetQuat, DeltaTime, 5.f);
+}
+
+void UMyCharacterMovementComponent::SnapMovementToClimableSurfaces(float DeltaTime)
+{
+	const FVector ComponentForward = UpdatedComponent->GetForwardVector();
+	const FVector ComponentLocation = UpdatedComponent->GetComponentLocation();
+
+	const FVector ProjectedCharacterToSurface = (CurrentClimbableSurfaceLocation - ComponentLocation).ProjectOnTo(ComponentForward);
+	const FVector SnapVector = -CurrentClimbableSurfaceNormal * ProjectedCharacterToSurface.Length();
+
+	UpdatedComponent->MoveComponent(SnapVector * DeltaTime * MaxClimbSpeed, UpdatedComponent->GetComponentQuat(), true);
 }
 
 void UMyCharacterMovementComponent::ToggleClimbing(bool bEnableClimb)
