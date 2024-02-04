@@ -14,6 +14,7 @@ class AClimbingSystemCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
+#pragma region Components
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
@@ -25,6 +26,9 @@ class AClimbingSystemCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	UMyCharacterMovementComponent* MyCharacterMovementComponent;
 	
+#pragma endregion
+
+#pragma region Input
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputMappingContext* DefaultMappingContext;
@@ -41,18 +45,18 @@ class AClimbingSystemCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LookAction;
 
-public:
-	AClimbingSystemCharacter(const FObjectInitializer& ObjectInitializer);
-	/** Called for movement input */
-	void Move(const FInputActionValue& Value);
-
+	/** Climb Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* ClimbAction;
-
+	
+public:
+	AClimbingSystemCharacter(const FObjectInitializer& ObjectInitializer);
+	
 	void OnClimbActionStarted(const FInputActionValue& Value);
 
 protected:
-
+	/** Called for movement input */
+	void Move(const FInputActionValue& Value);
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 			

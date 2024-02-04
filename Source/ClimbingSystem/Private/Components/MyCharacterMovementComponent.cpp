@@ -77,7 +77,7 @@ TArray<FHitResult> UMyCharacterMovementComponent::DoCapsuleTraceMultiByObject(co
 	return OutCapsuleTraceHitResults;
 }
 
-FHitResult UMyCharacterMovementComponent::DOLineTarceSingelByObject(const FVector& Start, const FVector& End,
+FHitResult UMyCharacterMovementComponent::DoLineTraceSingleByObject(const FVector& Start, const FVector& End,
 	bool bShowDebugShape,bool bDrawPersistantShapes)
 {
 	FHitResult OutHit;
@@ -107,13 +107,13 @@ FHitResult UMyCharacterMovementComponent::DOLineTarceSingelByObject(const FVecto
 	return OutHit;
 }
 
-bool UMyCharacterMovementComponent::TraceClimbableSurface()
+bool UMyCharacterMovementComponent::TraceClimbableSurfaces()
 {
 	const FVector StartOffset = UpdatedComponent->GetForwardVector() * 30.f;
 	const FVector Start = UpdatedComponent->GetComponentLocation()+StartOffset;
 	const FVector End = Start + UpdatedComponent->GetForwardVector();
 
-	ClimbableSurfacesTracedResults = DoCapsuleTraceMultiByObject(Start,End,true,true);
+	ClimbableSurfacesTracedResults = DoCapsuleTraceMultiByObject(Start,End,true);
 
 	return !ClimbableSurfacesTracedResults.IsEmpty();
 }
@@ -126,13 +126,13 @@ FHitResult UMyCharacterMovementComponent::TraceFromEyeHeight(float TraceDistance
 	const FVector Start = ComponentLocation + EyeHeightOffset;
 	const FVector End = Start + UpdatedComponent->GetForwardVector() * TraceDistance;
 
-	return DOLineTarceSingelByObject(Start,End,true, true);
+	return DoLineTraceSingleByObject(Start,End,true);
 }
 
 bool UMyCharacterMovementComponent::CanStartClimbing()
 {
 	if(IsFalling()) return false;
-	if(!TraceClimbableSurface()) return false;
+	if(!TraceClimbableSurfaces()) return false;
 	if(!TraceFromEyeHeight(100.f).bBlockingHit) return false;
 
 	return true;
@@ -151,9 +151,11 @@ void UMyCharacterMovementComponent::StopClimbing()
 void UMyCharacterMovementComponent::PhysClimb(float deltatime, int32 Iterations)
 {
 	if(deltatime < MIN_TICK_TIME)
-		return;;
+		return;
 
 	// Process all th climbable surfaces info
+	TraceClimbableSurfaces();
+	ProcessClimableSurfaceInfo();
 	// check if we should stop climbing
 
 	RestorePreAdditiveRootMotionVelocity();
@@ -185,6 +187,26 @@ void UMyCharacterMovementComponent::PhysClimb(float deltatime, int32 Iterations)
 	}
 
 	/*Snap movement to climbable surfaces*/
+}
+
+void UMyCharacterMovementComponent::ProcessClimableSurfaceInfo()
+{
+	CurrentClimbableSurfaceLocation = FVector::ZeroVector;
+	CurrentClimbableSurfaceNormal = FVector::ZeroVector;
+
+	if(ClimbableSurfacesTracedResults.IsEmpty())return;
+
+	for(const FHitResult& TracedHitResult : ClimbableSurfacesTracedResults)
+	{
+		CurrentClimbableSurfaceLocation += TracedHitResult.ImpactPoint;
+		CurrentClimbableSurfaceNormal += TracedHitResult.ImpactNormal;
+	}
+
+	CurrentClimbableSurfaceLocation /= ClimbableSurfacesTracedResults.Num();
+	CurrentClimbableSurfaceNormal = CurrentClimbableSurfaceNormal.GetSafeNormal();
+
+	Debug::Print(TEXT("ClimbableSurfaceLocation: ") + CurrentClimbableSurfaceLocation.ToCompactString(),FColor::Cyan,1);
+	Debug::Print(TEXT("ClimbableSurfaceNormal: ") + CurrentClimbableSurfaceNormal.ToCompactString(),FColor::Red,2);
 }
 
 void UMyCharacterMovementComponent::ToggleClimbing(bool bEnableClimb)
