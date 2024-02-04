@@ -186,6 +186,10 @@ void UMyCharacterMovementComponent::PhysClimb(float deltatime, int32 Iterations)
 	TraceClimbableSurfaces();
 	ProcessClimableSurfaceInfo();
 	// check if we should stop climbing
+	if(CheckShouldStopClimbing())
+	{
+		StopClimbing();
+	}
 
 	RestorePreAdditiveRootMotionVelocity();
 	if(!HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity())
@@ -237,6 +241,20 @@ void UMyCharacterMovementComponent::ProcessClimableSurfaceInfo()
 
 	Debug::Print(TEXT("ClimbableSurfaceLocation: ") + CurrentClimbableSurfaceLocation.ToCompactString(),FColor::Cyan,1);
 	Debug::Print(TEXT("ClimbableSurfaceNormal: ") + CurrentClimbableSurfaceNormal.ToCompactString(),FColor::Red,2);
+}
+
+bool UMyCharacterMovementComponent::CheckShouldStopClimbing()
+{
+	if(ClimbableSurfacesTracedResults.IsEmpty()) return true;
+
+	const float DotResult = FVector::DotProduct(CurrentClimbableSurfaceNormal, FVector::UpVector);
+	const float DegreeDiff = FMath::RadiansToDegrees(FMath::Acos(DotResult));
+
+	if(DegreeDiff<=60.f)
+		return true;
+	Debug::Print(TEXT("Degree Diff: ") + FString::SanitizeFloat(DegreeDiff),FColor::Cyan,1);
+
+	return false;
 }
 
 FQuat UMyCharacterMovementComponent::GetClimbRotation(float DeltaTime)

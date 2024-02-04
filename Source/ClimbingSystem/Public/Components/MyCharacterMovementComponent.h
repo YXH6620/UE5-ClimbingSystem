@@ -59,6 +59,8 @@ private:
 	void PhysClimb(float deltaTime, int32 Iterations);
 
 	void ProcessClimableSurfaceInfo();
+
+	bool CheckShouldStopClimbing();
 	
 	FQuat GetClimbRotation(float DeltaTime);
 
