@@ -6,6 +6,7 @@
 #include "ClimbingSystem/ClimbingSystemCharacter.h"
 #include "ClimbingSystem/DebugHelper.h"
 #include "Components/CapsuleComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 void UMyCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
                                                   FActorComponentTickFunction* ThisTickFunction)
@@ -338,4 +339,9 @@ void UMyCharacterMovementComponent::ToggleClimbing(bool bEnableClimb)
 bool UMyCharacterMovementComponent::IsClimbing() const
 {
 	return MovementMode == MOVE_Custom && CustomMovementMode == ECustomMovementMode::MOVE_Climb;
+}
+
+FVector UMyCharacterMovementComponent::GetUnrotatedClimbVelocity() const
+{
+	return UKismetMathLibrary::Quat_UnrotateVector(UpdatedComponent->GetComponentQuat(), Velocity);
 }
