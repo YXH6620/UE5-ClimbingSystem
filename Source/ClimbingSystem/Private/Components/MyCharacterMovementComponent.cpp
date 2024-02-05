@@ -199,7 +199,7 @@ void UMyCharacterMovementComponent::PhysClimb(float deltatime, int32 Iterations)
 	TraceClimbableSurfaces();
 	ProcessClimableSurfaceInfo();
 	// check if we should stop climbing
-	if(CheckShouldStopClimbing())
+	if(CheckShouldStopClimbing() || CheckHasReachedFloor())
 	{
 		StopClimbing();
 	}
@@ -267,6 +267,25 @@ bool UMyCharacterMovementComponent::CheckShouldStopClimbing()
 		return true;
 	Debug::Print(TEXT("Degree Diff: ") + FString::SanitizeFloat(DegreeDiff),FColor::Cyan,1);
 
+	return false;
+}
+
+bool UMyCharacterMovementComponent::CheckHasReachedFloor()
+{
+	const FVector DownVector = -UpdatedComponent->GetUpVector();
+	const FVector StartOffset = DownVector * 50.f;
+
+	const FVector Start = UpdatedComponent->GetComponentLocation() + StartOffset;
+	const FVector End = Start + DownVector;
+
+	TArray<FHitResult> PossibleFloorHits = DoCapsuleTraceMultiByObject(Start, End, true);
+	if (PossibleFloorHits.IsEmpty()) return false;
+	for (const FHitResult& PossibleFloorHit : PossibleFloorHits)
+	{
+		const bool bFloorReached = FVector::Parallel(-PossibleFloorHit.ImpactNormal, FVector::UpVector) && GetUnrotatedClimbVelocity().Z < -10.f;
+		if (bFloorReached)
+			return true;
+	}
 	return false;
 }
 

@@ -65,6 +65,8 @@ private:
 	void ProcessClimableSurfaceInfo();
 
 	bool CheckShouldStopClimbing();
+
+	bool CheckHasReachedFloor();
 	
 	FQuat GetClimbRotation(float DeltaTime);
 
