@@ -306,6 +306,10 @@ void UMyCharacterMovementComponent::PlayClimbMontage(UAnimMontage* MontageToPlay
 void UMyCharacterMovementComponent::OnClimbMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	Debug::Print(TEXT("Climb montage ended"));
+	if (Montage == IdleToClimbMontage)
+	{
+		StartClimbing();
+	}
 }
 
 void UMyCharacterMovementComponent::ToggleClimbing(bool bEnableClimb)
