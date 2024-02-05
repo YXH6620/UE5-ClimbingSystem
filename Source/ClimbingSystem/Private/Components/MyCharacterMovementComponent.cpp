@@ -16,6 +16,18 @@ void UMyCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick Ti
 	//TraceFromEyeHeight(100.f);
 }
 
+void UMyCharacterMovementComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	OwningPlayerAnimInstance = CharacterOwner->GetMesh()->GetAnimInstance();
+	if (OwningPlayerAnimInstance)
+	{
+		OwningPlayerAnimInstance->OnMontageEnded.AddDynamic(this, &UMyCharacterMovementComponent::OnClimbMontageEnded);
+		OwningPlayerAnimInstance->OnMontageBlendingOut.AddDynamic(this, &UMyCharacterMovementComponent::OnClimbMontageEnded);
+	}
+}
+
 void UMyCharacterMovementComponent::OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode)
 {
 	if(IsClimbing())
@@ -282,6 +294,20 @@ void UMyCharacterMovementComponent::SnapMovementToClimableSurfaces(float DeltaTi
 	UpdatedComponent->MoveComponent(SnapVector * DeltaTime * MaxClimbSpeed, UpdatedComponent->GetComponentQuat(), true);
 }
 
+void UMyCharacterMovementComponent::PlayClimbMontage(UAnimMontage* MontageToPlay)
+{
+	if (!MontageToPlay)return;
+	if (!OwningPlayerAnimInstance)return;
+	if (OwningPlayerAnimInstance->IsAnyMontagePlaying())return;
+
+	OwningPlayerAnimInstance->Montage_Play(MontageToPlay);
+}
+
+void UMyCharacterMovementComponent::OnClimbMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	Debug::Print(TEXT("Climb montage ended"));
+}
+
 void UMyCharacterMovementComponent::ToggleClimbing(bool bEnableClimb)
 {
 	if(bEnableClimb)
@@ -290,7 +316,7 @@ void UMyCharacterMovementComponent::ToggleClimbing(bool bEnableClimb)
 		{
 			// Enter the Climb state
 			Debug::Print(TEXT("Can start climbing"));
-			StartClimbing();
+			PlayClimbMontage(IdleToClimbMontage);
 		}
 		else
 		{
