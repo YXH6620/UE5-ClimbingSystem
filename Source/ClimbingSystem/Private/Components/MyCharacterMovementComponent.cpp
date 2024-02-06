@@ -15,6 +15,7 @@ void UMyCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick Ti
 
 	//TraceClimbableSurface();
 	//TraceFromEyeHeight(100.f);
+	CheckClimbDownLedge();
 }
 
 void UMyCharacterMovementComponent::BeginPlay()
@@ -332,6 +333,29 @@ bool UMyCharacterMovementComponent::CheckHasReachedLedge()
 	return false;
 }
 
+bool UMyCharacterMovementComponent::CheckClimbDownLedge()
+{
+	if(IsFalling())return false;
+
+	const FVector ComponentLocation = UpdatedComponent->GetComponentLocation();
+	const FVector ComponentForward = UpdatedComponent->GetForwardVector();
+	const FVector DownVector = -UpdatedComponent->GetUpVector();
+
+	const FVector WalkableSurfaceTraceStart = ComponentLocation + ComponentForward * ClimbDownWalkableSurfaceTraceOffset;
+	const FVector WalkableSurfaceTraceEnd = WalkableSurfaceTraceStart + DownVector * 100.f;
+	FHitResult WalkableSurfaceHit = DoLineTraceSingleByObject(WalkableSurfaceTraceStart,WalkableSurfaceTraceEnd,true);
+
+	const FVector LedgeTraceStart = WalkableSurfaceHit.TraceStart + ComponentForward * ClimbDownWalkableSurfaceTraceOffset;
+	const FVector LedgeTraceEnd = LedgeTraceStart + DownVector * 300.f;
+	FHitResult LedgeTraceHit = DoLineTraceSingleByObject(LedgeTraceStart,LedgeTraceEnd,true);
+
+	if(WalkableSurfaceHit.bBlockingHit && !LedgeTraceHit.bBlockingHit)
+	{
+		return true;
+	}
+	return false;
+}
+
 FQuat UMyCharacterMovementComponent::GetClimbRotation(float DeltaTime)
 {
 	const FQuat CurrentQuat = UpdatedComponent->GetComponentQuat();
@@ -388,6 +412,10 @@ void UMyCharacterMovementComponent::ToggleClimbing(bool bEnableClimb)
 			// Enter the Climb state
 			Debug::Print(TEXT("Can start climbing"));
 			PlayClimbMontage(IdleToClimbMontage);
+		}
+		else if(CheckClimbDownLedge())
+		{
+			Debug::Print(TEXT("Can climb down"),FColor::Cyan,1);
 		}
 		else
 		{
