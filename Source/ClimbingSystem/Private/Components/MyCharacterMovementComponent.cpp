@@ -86,6 +86,20 @@ float UMyCharacterMovementComponent::GetMaxAcceleration() const
 	}
 }
 
+FVector UMyCharacterMovementComponent::ConstrainAnimRootMotionVelocity(const FVector& RootMotionVelocity,
+	const FVector& CurrentVelocity) const
+{
+	const bool bIsPlayingRMMMontage = IsFalling() && OwningPlayerAnimInstance && OwningPlayerAnimInstance->IsAnyMontagePlaying();
+	if(bIsPlayingRMMMontage)
+	{
+		return RootMotionVelocity;
+	}
+	else
+	{
+		return Super::ConstrainAnimRootMotionVelocity(RootMotionVelocity, CurrentVelocity);
+	}
+}
+
 TArray<FHitResult> UMyCharacterMovementComponent::DoCapsuleTraceMultiByObject(const FVector& Start, const FVector& End,
                                                                               bool bShowDebugShape,bool bDrawPersistantShapes)
 {
@@ -234,6 +248,12 @@ void UMyCharacterMovementComponent::PhysClimb(float deltatime, int32 Iterations)
 
 	/*Snap movement to climbable surfaces*/
 	SnapMovementToClimableSurfaces(deltatime);
+
+	if(CheckHasReachedLedge())
+	{
+		StopClimbing();
+		PlayClimbMontage(ClimbToTopMontage);
+	}
 }
 
 void UMyCharacterMovementComponent::ProcessClimableSurfaceInfo()
@@ -289,6 +309,29 @@ bool UMyCharacterMovementComponent::CheckHasReachedFloor()
 	return false;
 }
 
+bool UMyCharacterMovementComponent::CheckHasReachedLedge()
+{
+	FHitResult LedgetHitResult = TraceFromEyeHeight(100.f,50.f);
+
+	if(!LedgetHitResult.bBlockingHit)
+	{
+		const FVector WalkableSurfaceTraceStart = LedgetHitResult.TraceEnd;
+
+		const FVector DownVector = -UpdatedComponent->GetUpVector();
+		const FVector WalkableSurfaceTraceEnd = WalkableSurfaceTraceStart + DownVector * 100.f;
+
+		FHitResult WalkabkeSurfaceHitResult =
+		DoLineTraceSingleByObject(WalkableSurfaceTraceStart,WalkableSurfaceTraceEnd,true);
+
+		if(WalkabkeSurfaceHitResult.bBlockingHit && GetUnrotatedClimbVelocity().Z > 10.f)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 FQuat UMyCharacterMovementComponent::GetClimbRotation(float DeltaTime)
 {
 	const FQuat CurrentQuat = UpdatedComponent->GetComponentQuat();
@@ -329,6 +372,10 @@ void UMyCharacterMovementComponent::OnClimbMontageEnded(UAnimMontage* Montage, b
 	if (Montage == IdleToClimbMontage)
 	{
 		StartClimbing();
+	}
+	else
+	{
+		SetMovementMode(MOVE_Walking);
 	}
 }
 
