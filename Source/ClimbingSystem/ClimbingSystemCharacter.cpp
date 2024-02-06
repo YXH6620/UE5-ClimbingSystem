@@ -10,6 +10,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "MotionWarpingComponent.h"
 #include "DebugHelper.h"
 
 //////////////////////////////////////////////////////////////////////////
@@ -53,6 +54,7 @@ AClimbingSystemCharacter::AClimbingSystemCharacter(const FObjectInitializer& Obj
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
 	MyCharacterMovementComponent = Cast<UMyCharacterMovementComponent>(GetCharacterMovement());
+	MotionWarpingComponent = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarpingComp"));
 }
 
 void AClimbingSystemCharacter::BeginPlay()

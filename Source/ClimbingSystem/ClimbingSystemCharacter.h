@@ -8,6 +8,7 @@
 #include "ClimbingSystemCharacter.generated.h"
 
 class UMyCharacterMovementComponent;
+class UMotionWarpingComponent;
 
 UCLASS(config=Game)
 class AClimbingSystemCharacter : public ACharacter
@@ -23,8 +24,11 @@ class AClimbingSystemCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	UMyCharacterMovementComponent* MyCharacterMovementComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	UMotionWarpingComponent* MotionWarpingComponent;
 	
 #pragma endregion
 
@@ -78,5 +82,6 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 	FORCEINLINE UMyCharacterMovementComponent* GetMyCharacterMovementComponent() {return MyCharacterMovementComponent;}
+	FORCEINLINE UMotionWarpingComponent* GetMotionWarpingComponent() { return MotionWarpingComponent; }
 };
 
