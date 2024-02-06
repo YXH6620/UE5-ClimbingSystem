@@ -55,20 +55,20 @@ private:
 
 	FHitResult TraceFromEyeHeight(float TraceDistance,float TraceStartOffset = 0.f);
 
-	bool CanStartClimbing();
-
-	void StartClimbing();
-
-	void StopClimbing();
-
 	void PhysClimb(float deltaTime, int32 Iterations);
 
 	void ProcessClimableSurfaceInfo();
+
+	bool CanStartClimbing();
+	void StartClimbing();
+	void StopClimbing();
 
 	bool CheckShouldStopClimbing();
 	bool CheckHasReachedFloor();
 	bool CheckHasReachedLedge();
 	bool CheckClimbDownLedge();
+	bool CanStartVaulting(FVector& OutVaultStartPosition, FVector& OutVaultLandPosition);
+	void TryStartVaulting();
 	
 	FQuat GetClimbRotation(float DeltaTime);
 

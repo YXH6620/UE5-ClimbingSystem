@@ -356,6 +356,54 @@ bool UMyCharacterMovementComponent::CheckClimbDownLedge()
 	return false;
 }
 
+bool UMyCharacterMovementComponent::CanStartVaulting(FVector& OutVaultStartPosition, FVector& OutVaultLandPosition)
+{
+	if (IsFalling()) return false;
+
+	OutVaultStartPosition = FVector::ZeroVector;
+	OutVaultLandPosition = FVector::ZeroVector;
+
+	const FVector ComponentLocation = UpdatedComponent->GetComponentLocation();
+	const FVector ComponentForward = UpdatedComponent->GetForwardVector();
+	const FVector UpVector = UpdatedComponent->GetUpVector();
+	const FVector DownVector = -UpdatedComponent->GetUpVector();
+
+	for (int32 i = 0; i < 5; i++)
+	{
+		const FVector Start = ComponentLocation + UpVector * 100.f + ComponentForward * (i + 1) * 100.f;
+		const FVector End = Start + DownVector * 100.f * (i + 1);
+
+		FHitResult VaultTraceHit = DoLineTraceSingleByObject(Start, End, true);
+		if (i == 0 && VaultTraceHit.bBlockingHit)
+			OutVaultStartPosition = VaultTraceHit.ImpactPoint;
+
+		if (i == 4 && VaultTraceHit.bBlockingHit)
+			OutVaultLandPosition = VaultTraceHit.ImpactPoint;
+	}
+
+	if (OutVaultStartPosition != FVector::ZeroVector && OutVaultLandPosition != FVector::ZeroVector)
+		return true;
+	else
+		return false;
+}
+
+void UMyCharacterMovementComponent::TryStartVaulting()
+{
+	FVector VaultStartPosition;
+	FVector VaultLandPosition;
+
+	if (CanStartVaulting(VaultStartPosition, VaultLandPosition))
+	{
+		//Start vaulting
+		Debug::Print(TEXT("Start position: ") + VaultStartPosition.ToCompactString());
+		Debug::Print(TEXT("Land position: ") + VaultLandPosition.ToCompactString());
+	}
+	else
+	{
+		Debug::Print(TEXT("Unable to vault "));
+	}
+}
+
 FQuat UMyCharacterMovementComponent::GetClimbRotation(float DeltaTime)
 {
 	const FQuat CurrentQuat = UpdatedComponent->GetComponentQuat();
@@ -418,9 +466,13 @@ void UMyCharacterMovementComponent::ToggleClimbing(bool bEnableClimb)
 		{
 			PlayClimbMontage(ClimbDownLedgeMontage);
 		}
-		
+		else
+		{
+			TryStartVaulting();
+		}
 	}
-	else
+
+	if (!bEnableClimb)
 	{
 		// Stop Climbing
 		StopClimbing();
