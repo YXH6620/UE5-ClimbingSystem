@@ -15,7 +15,7 @@ void UMyCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick Ti
 
 	//TraceClimbableSurface();
 	//TraceFromEyeHeight(100.f);
-	CheckClimbDownLedge();
+	//CheckClimbDownLedge();
 }
 
 void UMyCharacterMovementComponent::BeginPlay()
@@ -346,7 +346,7 @@ bool UMyCharacterMovementComponent::CheckClimbDownLedge()
 	FHitResult WalkableSurfaceHit = DoLineTraceSingleByObject(WalkableSurfaceTraceStart,WalkableSurfaceTraceEnd,true);
 
 	const FVector LedgeTraceStart = WalkableSurfaceHit.TraceStart + ComponentForward * ClimbDownWalkableSurfaceTraceOffset;
-	const FVector LedgeTraceEnd = LedgeTraceStart + DownVector * 300.f;
+	const FVector LedgeTraceEnd = LedgeTraceStart + DownVector * 200.f;
 	FHitResult LedgeTraceHit = DoLineTraceSingleByObject(LedgeTraceStart,LedgeTraceEnd,true);
 
 	if(WalkableSurfaceHit.bBlockingHit && !LedgeTraceHit.bBlockingHit)
@@ -393,11 +393,12 @@ void UMyCharacterMovementComponent::PlayClimbMontage(UAnimMontage* MontageToPlay
 void UMyCharacterMovementComponent::OnClimbMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	Debug::Print(TEXT("Climb montage ended"));
-	if (Montage == IdleToClimbMontage)
+	if (Montage == IdleToClimbMontage || Montage == ClimbDownLedgeMontage)
 	{
 		StartClimbing();
+		StopMovementImmediately();
 	}
-	else
+	else if(Montage == ClimbToTopMontage)
 	{
 		SetMovementMode(MOVE_Walking);
 	}
@@ -415,13 +416,9 @@ void UMyCharacterMovementComponent::ToggleClimbing(bool bEnableClimb)
 		}
 		else if(CheckClimbDownLedge())
 		{
-			Debug::Print(TEXT("Can climb down"),FColor::Cyan,1);
+			PlayClimbMontage(ClimbDownLedgeMontage);
 		}
-		else
-		{
-			Debug::Print(TEXT("Can not start climbing"));
-			
-		}
+		
 	}
 	else
 	{
