@@ -40,9 +40,16 @@ class AClimbingSystemCharacter : public ACharacter
 
 	void OnPlayerEnterClimbState();
 	void OnPlayerExitClimbState();
+
+	void AddInputContextMapping(UInputMappingContext* ContextToAdd, int32 InPriority);
+	void RemoveInputContextMapping(UInputMappingContext* ContextToAdd);
+
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputMappingContext* ClimbMappingContext;
 
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -51,6 +58,9 @@ class AClimbingSystemCharacter : public ACharacter
 	/** Move Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* ClimbMoveAction;
 
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -69,8 +79,7 @@ public:
 #pragma region InputCallback
 
 protected:
-	/** Called for movement input */
-	void Move(const FInputActionValue& Value);
+	
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 	void HandleGroundMovementInput(const FInputActionValue& Value);
