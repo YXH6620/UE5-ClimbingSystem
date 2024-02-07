@@ -70,6 +70,9 @@ class AClimbingSystemCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* ClimbAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* ClimbHopAction;
+
 #pragma endregion
 
 public:
@@ -85,6 +88,7 @@ protected:
 	void HandleGroundMovementInput(const FInputActionValue& Value);
 	void HandleClimbMovementInput(const FInputActionValue& Value);
 	void OnClimbActionStarted(const FInputActionValue& Value);
+	void OnClimbHopActionStarted(const FInputActionValue& Value);
 
 #pragma endregion
 
