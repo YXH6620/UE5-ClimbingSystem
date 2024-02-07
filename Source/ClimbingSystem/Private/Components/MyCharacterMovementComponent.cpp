@@ -5,6 +5,8 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "ClimbingSystem/ClimbingSystemCharacter.h"
 #include "ClimbingSystem/DebugHelper.h"
+#include "ClimbingSystem/ClimbingSystemCharacter.h"
+#include "MotionWarpingComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -28,6 +30,8 @@ void UMyCharacterMovementComponent::BeginPlay()
 		OwningPlayerAnimInstance->OnMontageEnded.AddDynamic(this, &UMyCharacterMovementComponent::OnClimbMontageEnded);
 		OwningPlayerAnimInstance->OnMontageBlendingOut.AddDynamic(this, &UMyCharacterMovementComponent::OnClimbMontageEnded);
 	}
+
+	OwningPlayerCharacter = Cast<AClimbingSystemCharacter>(CharacterOwner);
 }
 
 void UMyCharacterMovementComponent::OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode)
@@ -373,11 +377,11 @@ bool UMyCharacterMovementComponent::CanStartVaulting(FVector& OutVaultStartPosit
 		const FVector Start = ComponentLocation + UpVector * 100.f + ComponentForward * (i + 1) * 100.f;
 		const FVector End = Start + DownVector * 100.f * (i + 1);
 
-		FHitResult VaultTraceHit = DoLineTraceSingleByObject(Start, End, true);
+		FHitResult VaultTraceHit = DoLineTraceSingleByObject(Start, End, true, true);
 		if (i == 0 && VaultTraceHit.bBlockingHit)
 			OutVaultStartPosition = VaultTraceHit.ImpactPoint;
 
-		if (i == 4 && VaultTraceHit.bBlockingHit)
+		if (i == 3 && VaultTraceHit.bBlockingHit)
 			OutVaultLandPosition = VaultTraceHit.ImpactPoint;
 	}
 
@@ -395,12 +399,11 @@ void UMyCharacterMovementComponent::TryStartVaulting()
 	if (CanStartVaulting(VaultStartPosition, VaultLandPosition))
 	{
 		//Start vaulting
-		Debug::Print(TEXT("Start position: ") + VaultStartPosition.ToCompactString());
-		Debug::Print(TEXT("Land position: ") + VaultLandPosition.ToCompactString());
-	}
-	else
-	{
-		Debug::Print(TEXT("Unable to vault "));
+		SetMotionWarpTarget(FName("VaultStartPoint"), VaultStartPosition);
+		SetMotionWarpTarget(FName("VaultEndPoint"), VaultLandPosition);
+
+		StartClimbing();
+		PlayClimbMontage(VaultMontage);
 	}
 }
 
@@ -446,10 +449,21 @@ void UMyCharacterMovementComponent::OnClimbMontageEnded(UAnimMontage* Montage, b
 		StartClimbing();
 		StopMovementImmediately();
 	}
-	else if(Montage == ClimbToTopMontage)
+	else if(Montage == ClimbToTopMontage || Montage == VaultMontage)
 	{
 		SetMovementMode(MOVE_Walking);
 	}
+}
+
+void UMyCharacterMovementComponent::SetMotionWarpTarget(const FName& InWarpTargetName, const FVector& InTargetPostion)
+{
+	if (OwningPlayerCharacter == nullptr)
+		return;
+
+	OwningPlayerCharacter->GetMotionWarpingComponent()->AddOrUpdateWarpTargetFromLocation(
+		InWarpTargetName,
+		InTargetPostion
+	);
 }
 
 void UMyCharacterMovementComponent::ToggleClimbing(bool bEnableClimb)

@@ -8,6 +8,7 @@
 
 class UAnimMontage;
 class UAnimInstance;
+class AClimbingSystemCharacter;
 
 UENUM(BlueprintType)
 namespace ECustomMovementMode
@@ -79,6 +80,8 @@ private:
 	UFUNCTION()
 	void OnClimbMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
+	void SetMotionWarpTarget(const FName& InWarpTargetName, const FVector& InTargetPostion);
+
 #pragma endregion
 
 #pragma region ClimbCoreVariables
@@ -91,6 +94,8 @@ private:
 
 	UPROPERTY()
 	UAnimInstance* OwningPlayerAnimInstance;
+	UPROPERTY()
+	AClimbingSystemCharacter* OwningPlayerCharacter;
 
 #pragma endregion
 
@@ -128,6 +133,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Climbing", meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* ClimbDownLedgeMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Movement: Climbing", meta = (AllowPrivateAccess = "true"))
+	UAnimMontage* VaultMontage;
 
 #pragma endregion
 
