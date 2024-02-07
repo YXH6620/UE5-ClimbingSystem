@@ -16,6 +16,16 @@
 //////////////////////////////////////////////////////////////////////////
 // AClimbingSystemCharacter
 
+void AClimbingSystemCharacter::OnPlayerEnterClimbState()
+{
+	Debug::Print(TEXT("Entered climb state"));
+}
+
+void AClimbingSystemCharacter::OnPlayerExitClimbState()
+{
+	Debug::Print(TEXT("Exited climb state"));
+}
+
 AClimbingSystemCharacter::AClimbingSystemCharacter(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
@@ -69,6 +79,12 @@ void AClimbingSystemCharacter::BeginPlay()
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
+	}
+
+	if (MyCharacterMovementComponent)
+	{
+		MyCharacterMovementComponent->OnEnterClimbStateDelegate.BindUObject(this, &ThisClass::OnPlayerEnterClimbState);
+		MyCharacterMovementComponent->OnExitClimbStateDelegate.BindUObject(this, &ThisClass::OnPlayerExitClimbState);
 	}
 }
 

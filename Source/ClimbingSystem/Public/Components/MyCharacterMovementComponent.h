@@ -6,6 +6,9 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "MyCharacterMovementComponent.generated.h"
 
+DECLARE_DELEGATE(FOnEnterClimbState)
+DECLARE_DELEGATE(FOnExitClimbState)
+
 class UAnimMontage;
 class UAnimInstance;
 class AClimbingSystemCharacter;
@@ -28,6 +31,11 @@ class CLIMBINGSYSTEM_API UMyCharacterMovementComponent : public UCharacterMoveme
 	GENERATED_BODY()
 
 protected:
+
+public:
+
+	FOnEnterClimbState OnEnterClimbStateDelegate;
+	FOnExitClimbState OnExitClimbStateDelegate;
 
 #pragma region OverridenFunctions
 	
