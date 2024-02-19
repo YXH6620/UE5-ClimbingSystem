@@ -184,7 +184,7 @@ bool UMyCharacterMovementComponent::TraceClimbableSurfaces()
 	return !ClimbableSurfacesTracedResults.IsEmpty();
 }
 
-FHitResult UMyCharacterMovementComponent::TraceFromEyeHeight(float TraceDistance, float TraceStartOffset)
+FHitResult UMyCharacterMovementComponent::TraceFromEyeHeight(float TraceDistance, float TraceStartOffset,bool bShowDebugShape,bool bDrawPersistantShapes)
 {
 	const FVector ComponentLocation = UpdatedComponent->GetComponentLocation();
 	const FVector EyeHeightOffset = UpdatedComponent->GetUpVector() * (CharacterOwner->BaseEyeHeight + TraceStartOffset);
@@ -192,7 +192,7 @@ FHitResult UMyCharacterMovementComponent::TraceFromEyeHeight(float TraceDistance
 	const FVector Start = ComponentLocation + EyeHeightOffset;
 	const FVector End = Start + UpdatedComponent->GetForwardVector() * TraceDistance;
 
-	return DoLineTraceSingleByObject(Start,End,true);
+	return DoLineTraceSingleByObject(Start,End,bShowDebugShape,bDrawPersistantShapes);
 }
 
 bool UMyCharacterMovementComponent::CanStartClimbing()
@@ -412,6 +412,51 @@ void UMyCharacterMovementComponent::TryStartVaulting()
 	}
 }
 
+void UMyCharacterMovementComponent::HandleHopUp()
+{
+	FVector HopUpTargetPoint;
+	if(CheckCanHopUp(HopUpTargetPoint))
+	{
+		SetMotionWarpTarget(FName("HopUpTargetPoint"), HopUpTargetPoint);
+		PlayClimbMontage(HopUpMontage);
+	}
+}
+
+bool UMyCharacterMovementComponent::CheckCanHopUp(FVector& OutHopUpTargetPosition)
+{
+	FHitResult HopUpHit = TraceFromEyeHeight(100.f, -20.f);
+	FHitResult SaftyLedgeHit = TraceFromEyeHeight(100.f, 150.f);
+	if(HopUpHit.bBlockingHit && SaftyLedgeHit.bBlockingHit)
+	{
+		OutHopUpTargetPosition = HopUpHit.ImpactPoint;
+		return true;
+	}
+	return false;
+}
+
+void UMyCharacterMovementComponent::HandleHopDown()
+{
+	FVector HopDownTargetPoint;
+
+	if(CheckCanHopDown(HopDownTargetPoint))
+	{
+		SetMotionWarpTarget(FName("HopDownTargetPoint"),HopDownTargetPoint);
+		PlayClimbMontage(HopDownMontage);
+	}
+}
+
+bool UMyCharacterMovementComponent::CheckCanHopDown(FVector& OutHopDownTargetPosition)
+{
+	FHitResult HopDownHit = TraceFromEyeHeight(100.f,-300.f);
+
+	if(HopDownHit.bBlockingHit)
+	{
+		OutHopDownTargetPosition = HopDownHit.ImpactPoint;
+		return true;
+	}
+	return false;
+}
+
 FQuat UMyCharacterMovementComponent::GetClimbRotation(float DeltaTime)
 {
 	const FQuat CurrentQuat = UpdatedComponent->GetComponentQuat();
@@ -507,15 +552,13 @@ void UMyCharacterMovementComponent::RequestHopping()
 	if(DotResult >= 0.9f)
 	{
 		Debug::Print(TEXT("Hop Up"));
+		HandleHopUp();
 	}
 	else if(DotResult <= -0.9f)
 	{
-		Debug::Print(TEXT("Hop Down"));
+		HandleHopDown();
 	}
-	else
-	{
-		Debug::Print(TEXT("Invalid Input Range"));
-	}
+
 }
 
 bool UMyCharacterMovementComponent::IsClimbing() const
