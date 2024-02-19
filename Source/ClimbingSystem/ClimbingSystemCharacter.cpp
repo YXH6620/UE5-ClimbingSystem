@@ -153,7 +153,10 @@ void AClimbingSystemCharacter::OnClimbActionStarted(const FInputActionValue& Val
 
 void AClimbingSystemCharacter::OnClimbHopActionStarted(const FInputActionValue& Value)
 {
-	Debug::Print(TEXT("Hopping Started"));
+	if(MyCharacterMovementComponent)
+	{
+		MyCharacterMovementComponent->RequestHopping();
+	}
 }
 
 void AClimbingSystemCharacter::Look(const FInputActionValue& Value)

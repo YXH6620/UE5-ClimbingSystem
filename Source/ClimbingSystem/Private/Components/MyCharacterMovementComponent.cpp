@@ -8,6 +8,7 @@
 #include "ClimbingSystem/ClimbingSystemCharacter.h"
 #include "MotionWarpingComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Kismet/KismetMaterialLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 
 void UMyCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
@@ -494,6 +495,26 @@ void UMyCharacterMovementComponent::ToggleClimbing(bool bEnableClimb)
 	{
 		// Stop Climbing
 		StopClimbing();
+	}
+}
+
+void UMyCharacterMovementComponent::RequestHopping()
+{
+	const FVector UnrotatedLastInputVector = UKismetMathLibrary::Quat_UnrotateVector(UpdatedComponent->GetComponentQuat(), GetLastInputVector());
+	const float DotResult = FVector::DotProduct(UnrotatedLastInputVector.GetSafeNormal(), FVector::UpVector);
+	Debug::Print(TEXT("Dot Result: ") + FString::SanitizeFloat(DotResult));
+
+	if(DotResult >= 0.9f)
+	{
+		Debug::Print(TEXT("Hop Up"));
+	}
+	else if(DotResult <= -0.9f)
+	{
+		Debug::Print(TEXT("Hop Down"));
+	}
+	else
+	{
+		Debug::Print(TEXT("Invalid Input Range"));
 	}
 }
 
