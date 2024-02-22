@@ -39,7 +39,8 @@
 
 ### Motion Warping
 
-**Motion Warping** 是一种可以动态调整角色的根骨骼运动以对齐目标的功能
+官方： **Motion Warping** 是一种可以动态调整角色的根骨骼运动以对齐目标的功能
+其他： MotionWarping（运动扭曲）可对角色根运动进行修改，从而让角色根运动动画结束时准确停在某一点（这个点就是Warp Target）。使用该功能后，对于翻越障碍物这类原先需要禁用根运动用代码做位移的操作，将变得简便。
 
 1. 要使用Motion Warping，需要在Plugin启用
 2. 在动画蒙太奇中，选择一个轨道添加Anim Notify State --> Motion Warping（需要原动画序列启用Root Motion）
